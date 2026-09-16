@@ -1,0 +1,529 @@
+<title>2026 倫敦巴黎行</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --paper:#eef1ee;
+    --ink:#16211f;
+    --ink-soft:#4d5c58;
+    --ink-faint:#8b9793;
+    --line:#d7dcd6;
+    --surface:#ffffff;
+    --surface-2:#e3e8e1;
+    --accent:#1f6f78;
+    --accent-ink:#ffffff;
+    --accent-soft:#dbe9e8;
+    --shadow:0 1px 2px rgba(22,33,31,.06), 0 8px 24px rgba(22,33,31,.08);
+
+    --c-tpe:#3f7d52; --c-tpe-soft:#e1efe4;
+    --c-sin:#a9781f; --c-sin-soft:#f3e8d2;
+    --c-lon:#48598c; --c-lon-soft:#e2e5f2;
+    --c-par:#9c4e69; --c-par-soft:#f2e1e7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#11181a;
+      --ink:#eef1ee;
+      --ink-soft:#a9b6b1;
+      --ink-faint:#647672;
+      --line:#28312f;
+      --surface:#1a2223;
+      --surface-2:#202a29;
+      --accent:#63d3d8;
+      --accent-ink:#0b2224;
+      --accent-soft:#1b3638;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px rgba(0,0,0,.35);
+
+      --c-tpe:#74c290; --c-tpe-soft:#1c3327;
+      --c-sin:#e0ac4d; --c-sin-soft:#3a2f18;
+      --c-lon:#93a2e0; --c-lon-soft:#232a45;
+      --c-par:#e197b0; --c-par-soft:#3a222c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#11181a; --ink:#eef1ee; --ink-soft:#a9b6b1; --ink-faint:#647672; --line:#28312f;
+    --surface:#1a2223; --surface-2:#202a29; --accent:#63d3d8; --accent-ink:#0b2224; --accent-soft:#1b3638;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px rgba(0,0,0,.35);
+    --c-tpe:#74c290; --c-tpe-soft:#1c3327;
+    --c-sin:#e0ac4d; --c-sin-soft:#3a2f18;
+    --c-lon:#93a2e0; --c-lon-soft:#232a45;
+    --c-par:#e197b0; --c-par-soft:#3a222c;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Noto Sans TC','IBM Plex Sans','PingFang TC',sans-serif;
+    padding-inline:16px; padding-block:0 96px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; min-height:100dvh;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+
+  /* ---- header ---- */
+  header{position:sticky; top:0; z-index:5; background:var(--paper); padding-block:14px 10px; border-bottom:1px solid var(--line);}
+  .header-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .trip-title{font-family:'Noto Serif TC',serif; font-weight:700; font-size:1.32rem; margin:0; letter-spacing:.01em;}
+  .pin-btn{
+    flex:none; display:flex; align-items:center; gap:5px; text-decoration:none;
+    background:var(--accent-soft); color:var(--accent); font-size:.82rem; font-weight:700;
+    padding:7px 12px; border-radius:99px; -webkit-tap-highlight-color:transparent;
+  }
+  .pin-btn:active{transform:translateY(1px);}
+  .trip-sub{margin:4px 0 0; font-size:.86rem; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .trip-sub .pill{
+    font-family:'IBM Plex Mono',monospace; font-size:.72rem; font-weight:600; letter-spacing:.02em;
+    background:var(--accent-soft); color:var(--accent); border-radius:99px; padding:2px 9px;
+  }
+
+  /* ---- day rail ---- */
+  .rail{display:flex; gap:8px; overflow-x:auto; padding:12px 2px 4px; scrollbar-width:none;}
+  .rail::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:7px 11px 8px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    cursor:pointer; -webkit-tap-highlight-color:transparent; position:relative; min-width:50px;
+  }
+  .chip .d{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.82rem;}
+  .chip .w{font-size:.68rem; color:var(--ink-faint);}
+  .chip .dot{position:absolute; top:5px; right:6px; width:6px; height:6px; border-radius:50%;}
+  .chip.is-active{background:var(--ink); border-color:var(--ink);}
+  .chip.is-active .d{color:var(--paper);}
+  .chip.is-active .w{color:var(--ink-faint);}
+  .chip.is-today{box-shadow:0 0 0 2px var(--accent);}
+
+  /* ---- card (boarding-pass) ---- */
+  main{flex:1; padding-block:14px 20px; display:flex; flex-direction:column;}
+  .card{
+    background:var(--surface); border-radius:18px; box-shadow:var(--shadow);
+    padding:20px; position:relative; overflow:hidden; animation:rise .32s ease both;
+  }
+  @keyframes rise{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){ .card{animation:none;} }
+
+  .card-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px;}
+  .head-date{display:flex; align-items:baseline; gap:8px;}
+  .head-date .big{font-family:'Fraunces',serif; font-weight:600; font-size:2.6rem; line-height:1;}
+  .head-date .wk{font-size:.98rem; color:var(--ink-soft); font-weight:500;}
+  .city-badge{
+    font-size:.78rem; font-weight:700; padding:5px 11px; border-radius:99px; white-space:nowrap;
+    letter-spacing:.02em;
+  }
+  .day-title{font-family:'Noto Serif TC',serif; font-weight:700; font-size:1.12rem; margin:2px 0 0;}
+  .day-note{font-size:.82rem; color:var(--ink-faint); margin:4px 0 0; line-height:1.6;}
+
+  .timeline{display:flex; flex-direction:column; margin-top:4px;}
+  .t-row{display:grid; grid-template-columns:64px 16px 1fr; column-gap:2px;}
+  .t-time{font-family:'IBM Plex Mono',monospace; font-size:.74rem; color:var(--ink-soft); padding-top:2px; text-align:right; line-height:1.5; word-break:keep-all;}
+  .t-rail{display:flex; flex-direction:column; align-items:center;}
+  .t-dot{width:7px; height:7px; border-radius:50%; background:var(--accent); margin-top:6px; flex:none;}
+  .t-line{flex:1; width:1px; background:var(--line); margin-top:2px;}
+  .t-row:last-child .t-line{display:none;}
+  .t-label{font-size:.92rem; line-height:1.6; padding-bottom:14px;}
+
+  .stub-divider{position:relative; height:0; border-top:2px dashed var(--line); margin:6px -20px 16px; }
+  .stub-divider::before, .stub-divider::after{
+    content:""; position:absolute; top:50%; transform:translateY(-50%);
+    width:20px; height:20px; border-radius:50%; background:var(--paper);
+  }
+  .stub-divider::before{left:-10px;}
+  .stub-divider::after{right:-10px;}
+
+  .stub{display:flex; flex-direction:column; gap:10px;}
+  .stub-row{display:flex; gap:10px; align-items:flex-start; font-size:.86rem; line-height:1.65;}
+  .stub-row .icon{flex:none; font-size:.95rem; margin-top:1px;}
+  .stub-row .k{font-weight:600; color:var(--ink-soft); white-space:nowrap;}
+  .stub-row .v{color:var(--ink);}
+  .stub-row a{color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent-soft); word-break:break-all;}
+  .meal-list{display:flex; flex-direction:column; gap:3px;}
+
+  /* ---- bottom nav ---- */
+  .navbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:6;
+    background:var(--surface); border-top:1px solid var(--line);
+    display:flex; justify-content:center;
+  }
+  .navbar-inner{width:100%; max-width:460px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:10px 16px calc(10px + env(safe-area-inset-bottom));}
+  .nav-btn{
+    background:none; border:none; font-family:'Noto Sans TC',sans-serif; color:var(--ink); font-size:.86rem;
+    display:flex; align-items:center; gap:5px; padding:8px 4px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .nav-btn.next{justify-self:end;}
+  .nav-btn.prev{justify-self:start;}
+  .nav-btn:disabled{opacity:.3;}
+  .nav-btn .arrow{font-size:1rem;}
+  .today-btn{
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:99px;
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.76rem; letter-spacing:.03em;
+    padding:8px 16px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .today-btn:focus-visible, .nav-btn:focus-visible, .chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="header-top">
+      <h1 class="trip-title">2026 倫敦巴黎行</h1>
+      <a class="pin-btn" href="https://drive.google.com/drive/folders/1M6BrnlNQrOxvHyKGPnBuDbwY_d5qFFov?usp=drive_link" target="_blank" rel="noopener">🎫 票券</a>
+    </div>
+    <p class="trip-sub" id="tripSub"></p>
+    <div class="rail" id="rail" role="tablist" aria-label="選擇日期"></div>
+  </header>
+  <main>
+    <div class="card" id="card"></div>
+  </main>
+</div>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <button class="nav-btn prev" id="prevBtn" aria-label="前一天"><span class="arrow">‹</span> 前一天</button>
+    <button class="today-btn" id="todayBtn">今天</button>
+    <button class="nav-btn next" id="nextBtn" aria-label="後一天">後一天 <span class="arrow">›</span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CITY = {
+    tpe:{ label:'台灣', color:'var(--c-tpe)', soft:'var(--c-tpe-soft)' },
+    sin:{ label:'新加坡', color:'var(--c-sin)', soft:'var(--c-sin-soft)' },
+    lon:{ label:'倫敦', color:'var(--c-lon)', soft:'var(--c-lon-soft)' },
+    par:{ label:'巴黎', color:'var(--c-par)', soft:'var(--c-par-soft)' },
+    transit:{ label:'移動日', color:'var(--accent)', soft:'var(--accent-soft)' }
+  };
+
+  var DAYS = [
+    { iso:'2026-09-17', date:'9/17', wk:'四', city:'tpe', title:'台灣出發日',
+      timeline:[
+        {t:'18:00', l:'洗澡＋準備'},
+        {t:'20:00', l:'出發前往桃園機場'},
+        {t:'22:00', l:'機場待機，準備登機'}
+      ]
+    },
+    { iso:'2026-09-18', date:'9/18', wk:'五', city:'transit', route:'台灣 → 新加坡 → 倫敦', title:'轉機抵達倫敦',
+      timeline:[
+        {t:'00:50', l:'✈️ 起飛：台灣 → 新加坡'},
+        {t:'05:25', l:'抵達新加坡樟宜機場 T1'},
+        {t:'06:00–07:30', l:'轉機整頓；7:30 T3 亞坤咖椰吐司，帶去登機門吃'},
+        {t:'09:00', l:'✈️ T3 起飛：新加坡 → 倫敦'},
+        {t:'15:45', l:'抵達倫敦！'},
+        {t:'16:45', l:'出境完畢 → 伊莉莎白線至帕丁頓站（27分）→ District 線至 Fulham（15分）→ 前往 Check in'},
+        {t:'約18:00', l:'抵達住宿，放行李休息；逛 Waitrose 超市（必買清單見小紅書）；民宿備有鍋具'},
+        {t:'晚間', l:'撐到當地時間晚上 9 點後再睡，克服時差'}
+      ]
+    },
+    { iso:'2026-09-19', date:'9/19', wk:'六', city:'lon', title:'倫敦・東區市集與鐵橋',
+      timeline:[
+        {t:'08:30–09:00', l:'起床＋準備'},
+        {t:'09:00–10:00', l:'前往 Old Spitalfields Market（District 線／Aldgate East 站）'},
+        {t:'10:00–13:30', l:'Old Spitalfields Market，續逛紅磚市集／吃貝果'},
+        {t:'13:30–14:00', l:'搭公車（149、388）前往波羅市集'},
+        {t:'14:00–15:30', l:'波羅市集：松露燉飯／生蠔／肉桂捲'},
+        {t:'16:00–17:30', l:'倫敦鐵橋 → Tower Millennium Pier 搭船（£11.5）→ Westminster Pier'},
+        {t:'傍晚', l:'Westminster 周邊晃晃，District 線可直達住宿'},
+        {t:'晚餐', l:'超市或泡麵'}
+      ],
+      meals:[
+        {k:'早午餐', v:'Beigel Bake，人均 £5–8'},
+        {k:'午餐', v:'海鮮燉飯／生蠔，人均 £10–12'},
+        {k:'晚餐', v:'超市或泡麵'}
+      ],
+      transport:'去程地鐵 £3.40 ＋ 公車 £1.75 ＋ Uber Boat £11.90 ＋ 回程地鐵 £3.40 ＝ £20.45',
+      links:[
+        {label:'倫敦景點整理', url:'https://wholovetravel.com/london-attractions/'},
+        {label:'倫敦地區導覽', url:'https://joinme-travel.com/england/south-east/london/'}
+      ]
+    },
+    { iso:'2026-09-20', date:'9/20', wk:'日', city:'lon', title:'倫敦・柯芬園與畫廊',
+      timeline:[
+        {t:'08:30–09:00', l:'起床＋準備'},
+        {t:'09:00–09:30', l:'前往柯芬園（District 線／Embankment 站）'},
+        {t:'09:30–13:00', l:'柯芬園、彩虹巷'},
+        {t:'13:00–13:15', l:'步行至 The National Gallery'},
+        {t:'13:15–15:00', l:'The National Gallery'},
+        {t:'15:00–18:00', l:'皮卡迪利圓環晃晃（週日多店僅營業至 18:00）'},
+        {t:'傍晚', l:'搭 14 號公車回 Fulham Station，返回住宿'}
+      ],
+      meals:[
+        {k:'早餐／點心', v:'Arôme Bakery（Mercer Street）'},
+        {k:'午餐', v:'Cô Thành 越南粉，人均 £18–20'},
+        {k:'點心', v:'Crème'},
+        {k:'晚餐', v:'超市或泡麵'}
+      ],
+      transport:'去程地鐵 £3.40 ＋ 回程公車 £1.75 ＝ £5.15'
+    },
+    { iso:'2026-09-21', date:'9/21', wk:'一', city:'lon', title:'倫敦・白金漢宮與西敏寺',
+      timeline:[
+        {t:'07:50–08:30', l:'起床＋準備'},
+        {t:'08:30–09:00', l:"前往白金漢宮（District 線／St. James's Park 站）"},
+        {t:'09:30–11:30', l:'白金漢宮（建議提早 15–30 分鐘，Gate B）'},
+        {t:'11:30–11:45', l:'衛兵交接／閱兵典禮'},
+        {t:'12:00–12:30', l:'步行至 Flat Iron Victoria'},
+        {t:'12:30–13:45', l:'午餐：Flat Iron'},
+        {t:'13:45–14:00', l:'步行至西敏寺（提早 15–30 分鐘）'},
+        {t:'14:30–16:30', l:'西敏寺（內部禁止拍照）'},
+        {t:'16:30–21:00', l:'大笨鐘、國會大廈 → Soho／攝政街，晚餐自由活動'},
+        {t:'夜間', l:'搭 14 號公車回 Fulham Station'}
+      ],
+      meals:[
+        {k:'早餐', v:'超市'},
+        {k:'午餐', v:'Flat Iron（已訂），人均 £15'},
+        {k:'晚餐', v:'Poppies Fish & Chips 或 YORI（韓式）'}
+      ],
+      transport:'去程地鐵 £3.40 ＋ 回程公車 £1.75 ＝ £5.15'
+    },
+    { iso:'2026-09-22', date:'9/22', wk:'二', city:'lon', title:'倫敦・大英博物館與劇院',
+      timeline:[
+        {t:'08:00–08:45', l:'起床＋準備'},
+        {t:'09:00–09:45', l:'搭 14 號公車前往大英博物館'},
+        {t:'10:00–13:00', l:'大英博物館'},
+        {t:'13:00–19:00', l:'自由時間，可安排自然史博物館（Piccadilly 線／South Kensington 站）'},
+        {t:'19:30–22:00', l:'《歌劇魅影》音樂劇'},
+        {t:'夜間', l:'搭 Uber 回住宿（約每人 NT$250）'}
+      ],
+      meals:[
+        {k:'早餐', v:'超市'},
+        {k:'午餐', v:'自行解決'},
+        {k:'晚餐', v:'自行解決，可吃宵夜泡麵'}
+      ],
+      transport:'去程公車 £1.75 ＋ Uber（約每人 NT$250）'
+    },
+    { iso:'2026-09-23', date:'9/23', wk:'三', city:'transit', route:'倫敦 → 巴黎（歐洲之星）', title:'搭歐洲之星赴巴黎',
+      timeline:[
+        {t:'08:00–09:00', l:'收拾行李＋Check out'},
+        {t:'09:00–09:30', l:"前往國王十字車站（District 線／Edgware Road 轉黃粉線／King's Cross 站）"},
+        {t:'09:30–10:45', l:'國王十字車站：逛 9¾ 月台、哈利波特商城'},
+        {t:'10:45–12:00', l:'排隊出境'},
+        {t:'12:30–15:59', l:'🚄 歐洲之星：倫敦 → 巴黎北站（Gare du Nord）'},
+        {t:'15:59–16:00', l:'自動售票機購買週票'},
+        {t:'16:00–16:30', l:'前往住宿（4 號紫線至 Barbès-Rochechouart，轉 2 號藍線至 Victor Hugo）'},
+        {t:'16:30–17:00', l:'Check in'},
+        {t:'17:30–17:45', l:'步行至夏樂宮（Palais de Chaillot）'},
+        {t:'17:45–18:45', l:'夏樂宮拍照、晃晃'},
+        {t:'18:45–19:05', l:'前往 Le Café du Commerce（M6 線至 La Motte-Picquet）'},
+        {t:'19:15', l:'晚餐'}
+      ],
+      meals:[
+        {k:'早餐', v:'超市'},
+        {k:'午餐', v:"Five Guys King's Cross，人均 £15–20"},
+        {k:'晚餐', v:'Le Café du Commerce（已訂），必點烤布蕾＆蝸牛'}
+      ]
+    },
+    { iso:'2026-09-24', date:'9/24', wk:'四', city:'par', title:'巴黎・羅浮宮與香榭麗舍',
+      timeline:[
+        {t:'08:50', l:'出門'},
+        {t:'08:50–09:10', l:'前往羅浮宮'},
+        {t:'09:30–13:30', l:'羅浮宮參觀（卡魯賽樂購物中心入口進入；地鐵 1／7 號線羅浮宮站地下商場入口）'},
+        {t:'13:30–14:00', l:'步行至餐廳'},
+        {t:'14:15–15:00', l:'午餐'},
+        {t:'15:00–18:00', l:'巴黎皇家宮殿、杜樂麗花園、方尖碑、香榭麗舍大道'},
+        {t:'黃昏', l:'凱旋門夕陽與夜景'}
+      ],
+      meals:[
+        {k:'午餐', v:'Peppe Pizzeria（已訂 14:15）／Bachir 冰淇淋'},
+        {k:'晚餐', v:'待定'}
+      ]
+    },
+    { iso:'2026-09-25', date:'9/25', wk:'五', city:'par', title:'巴黎・凡爾賽宮與百貨',
+      timeline:[
+        {t:'08:15', l:'出門'},
+        {t:'08:15–09:15', l:'前往凡爾賽宮'},
+        {t:'09:30–13:00', l:'凡爾賽宮'},
+        {t:'13:00–14:00', l:'午餐：麥當勞'},
+        {t:'14:00–15:00', l:'前往拉法葉百貨'},
+        {t:'15:00–20:30', l:'馬德萊娜教堂、拉法葉百貨、春天百貨、薇薇安拱廊街、瑪黑區逛街'}
+      ],
+      meals:[
+        {k:'早餐', v:'超市'},
+        {k:'午餐', v:'麥當勞'},
+        {k:'晚餐', v:'Le Petit Vendôme'}
+      ]
+    },
+    { iso:'2026-09-26', date:'9/26', wk:'六', city:'par', title:'巴黎・自由行與奧賽美術館',
+      timeline:[
+        {t:'上午', l:'自由行程：奧賽美術館'},
+        {t:'09:00', l:'出門'},
+        {t:'09:00–09:30', l:'搭地鐵前往奧賽美術館'},
+        {t:'09:30–12:30', l:'奧賽美術館'},
+        {t:'12:30–12:45', l:'搭地鐵前往 Ha Noi 1988'},
+        {t:'12:45–14:00', l:'午餐'},
+        {t:'14:00起', l:'聖母院／聖徒禮拜堂／莎士比亞書店、盧森堡公園／先賢祠'}
+      ],
+      meals:[
+        {k:'午餐', v:'Ha Noi 1988'},
+        {k:'咖啡', v:'雙叟咖啡館（Saint-Germain-des-Prés）'}
+      ]
+    },
+    { iso:'2026-09-27', date:'9/27', wk:'日', city:'transit', route:'巴黎 → 新加坡', title:'飛往新加坡＋夜遊轉機',
+      timeline:[
+        {t:'09:00', l:'出門，Check out'},
+        {t:'09:00–09:30', l:'前往巴黎北站'},
+        {t:'09:30–10:00', l:'Gare du Nord 寄放行李（Nannybag）'},
+        {t:'10:00–10:15', l:'前往蒙馬特高地'},
+        {t:'上午', l:'聖心堂／愛牆（地鐵 2 號線 Anvers 站）；伴手禮採購'},
+        {t:'18:00', l:'返程、領行李'},
+        {t:'18:00–19:00', l:'前往機場'},
+        {t:'19:00–22:35', l:'晚餐、等候出境登機'},
+        {t:'22:35', l:'✈️ 起飛：巴黎 → 新加坡'},
+        {t:'17:40', l:'抵達新加坡（隔日當地時間，樟宜機場）'},
+        {t:'18:30–19:30', l:'星耀樟宜'},
+        {t:'20:00–21:30', l:'濱海灣花園（夜間燈光秀 19:45）'},
+        {t:'21:30–22:30', l:'魚尾獅公園、金沙夜景'},
+        {t:'22:30–00:30', l:'老巴剎沙嗲街：烤沙嗲配啤酒'},
+        {t:'01:00後', l:'搭 Grab 回樟宜機場'}
+      ],
+      meals:[
+        {k:'甜點', v:'Berthillon 冰淇淋、Rue Lepic 水果塔、Bachar 開心果冰淇淋、Crêperie Genia 法式薄餅'}
+      ]
+    },
+    { iso:'2026-09-28', date:'9/28', wk:'一', city:'sin', title:'新加坡（轉機延伸）',
+      note:'本日無獨立安排，行程緊接 9/27 夜晚的新加坡轉機活動',
+      timeline:[
+        {t:'凌晨', l:'延續前一晚新加坡夜遊行程，於樟宜機場休息候機'}
+      ]
+    },
+    { iso:'2026-09-29', date:'9/29', wk:'二', city:'transit', route:'新加坡 → 台灣', title:'返回台灣',
+      timeline:[
+        {t:'00:00', l:'新加坡（樟宜機場）'},
+        {t:'07:00', l:'✈️ 起飛：新加坡 → 台灣'},
+        {t:'11:45', l:'🎉 抵達台灣'}
+      ]
+    }
+  ];
+
+  var railEl = document.getElementById('rail');
+  var cardEl = document.getElementById('card');
+  var subEl = document.getElementById('tripSub');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var todayBtn = document.getElementById('todayBtn');
+
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  var TODAY = todayISO();
+  var todayIdx = DAYS.findIndex(function(d){ return d.iso === TODAY; });
+  var idx = todayIdx >= 0 ? todayIdx : 0;
+
+  function buildRail(){
+    railEl.innerHTML = '';
+    DAYS.forEach(function(d, i){
+      var c = CITY[d.city];
+      var chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.setAttribute('role','tab');
+      chip.innerHTML =
+        '<span class="dot" style="background:'+c.color+'"></span>' +
+        '<span class="d">'+d.date+'</span>' +
+        '<span class="w">'+d.wk+'</span>';
+      if (d.iso === TODAY) chip.classList.add('is-today');
+      chip.addEventListener('click', function(){ select(i); });
+      railEl.appendChild(chip);
+    });
+  }
+
+  function tripStatusText(){
+    var start = DAYS[0].iso, end = DAYS[DAYS.length-1].iso;
+    if (TODAY < start){
+      var diff = Math.round((new Date(start) - new Date(TODAY)) / 86400000);
+      return '<span class="pill">距出發 '+diff+' 天</span>';
+    }
+    if (TODAY > end){
+      return '<span class="pill">行程已結束</span>';
+    }
+    return '<span class="pill">TODAY · 第 '+(todayIdx+1)+'／'+DAYS.length+' 天</span>';
+  }
+
+  function renderCard(){
+    var d = DAYS[idx];
+    var c = CITY[d.city];
+    var html = '';
+    html += '<div class="card-head">';
+    html += '<div class="head-date"><span class="big" style="color:'+c.color+'">'+d.date.split('/')[1]+'</span><span class="wk">'+d.wk+'　'+d.date+'</span></div>';
+    html += '<span class="city-badge" style="background:'+c.soft+'; color:'+c.color+'">'+ (d.route ? d.route : c.label) +'</span>';
+    html += '</div>';
+    html += '<h2 class="day-title">'+d.title+'</h2>';
+    if (d.note) html += '<p class="day-note">'+d.note+'</p>';
+
+    html += '<div class="timeline">';
+    d.timeline.forEach(function(row){
+      html += '<div class="t-row">';
+      html += '<div class="t-time">'+row.t+'</div>';
+      html += '<div class="t-rail"><span class="t-dot" style="background:'+c.color+'"></span><span class="t-line"></span></div>';
+      html += '<div class="t-label">'+row.l+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    var hasStub = d.meals || d.transport || d.links;
+    if (hasStub){
+      html += '<div class="stub-divider"></div>';
+      html += '<div class="stub">';
+      if (d.meals){
+        html += '<div class="stub-row"><span class="icon">🍴</span><div class="meal-list">';
+        d.meals.forEach(function(m){
+          html += '<div><span class="k">'+m.k+'</span> <span class="v">'+m.v+'</span></div>';
+        });
+        html += '</div></div>';
+      }
+      if (d.transport){
+        html += '<div class="stub-row"><span class="icon">💰</span><span class="v mono" style="font-size:.82rem;">'+d.transport+'</span></div>';
+      }
+      if (d.links){
+        html += '<div class="stub-row"><span class="icon">🔗</span><div class="meal-list">';
+        d.links.forEach(function(link){
+          html += '<div><a href="'+link.url+'" target="_blank" rel="noopener">'+link.label+'</a></div>';
+        });
+        html += '</div></div>';
+      }
+      html += '</div>';
+    }
+
+    cardEl.innerHTML = html;
+  }
+
+  function updateRailState(){
+    var chips = railEl.querySelectorAll('.chip');
+    chips.forEach(function(chip, i){
+      chip.classList.toggle('is-active', i === idx);
+    });
+    var active = chips[idx];
+    if (active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }
+
+  function updateNav(){
+    prevBtn.disabled = idx <= 0;
+    nextBtn.disabled = idx >= DAYS.length - 1;
+  }
+
+  function select(i){
+    idx = Math.max(0, Math.min(DAYS.length - 1, i));
+    renderCard();
+    updateRailState();
+    updateNav();
+  }
+
+  prevBtn.addEventListener('click', function(){ select(idx - 1); });
+  nextBtn.addEventListener('click', function(){ select(idx + 1); });
+  todayBtn.addEventListener('click', function(){ select(todayIdx >= 0 ? todayIdx : 0); });
+
+  window.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight') select(idx + 1);
+    else if (e.key === 'ArrowLeft') select(idx - 1);
+  });
+
+  var touchX = null;
+  document.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 60){ dx < 0 ? select(idx + 1) : select(idx - 1); }
+    touchX = null;
+  }, {passive:true});
+
+  subEl.innerHTML = tripStatusText();
+  buildRail();
+  select(idx);
+})();
+</script>
